@@ -28,9 +28,20 @@ def test_two_stage_duplicate_scanner_identifies_identical_payloads(tmp_path: Pat
     assert runs[0]["workflow_type"] == "deduplicate_scan"
 
 
+def test_two_stage_duplicate_scanner_handles_distinct_files_same_size(tmp_path: Path) -> None:
+    ledger = AuditLedger(":memory:")
+
+    (tmp_path / "file_a.bin").write_bytes(b"1234567890ABCDEF")
+    (tmp_path / "file_b.bin").write_bytes(b"FEDCBA0987654321")
+
+    report = scan_duplicates(tmp_path, ledger=ledger)
+    assert report.scanned_files == 2
+    assert len(report.duplicate_groups) == 0
+
+
 def test_csv_sanitizer_filters_invalid_rows_and_deduplicates(tmp_path: Path) -> None:
     ledger = AuditLedger(":memory:")
-    csv_file = tmp_path / "applicants.csv"
+    csv_file = tmp_path / "students.csv"
     out_json = tmp_path / "out" / "cleaned.json"
 
     csv_file.write_text(
