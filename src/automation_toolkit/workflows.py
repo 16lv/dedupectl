@@ -40,7 +40,7 @@ class TransformReport:
 
 
 class AuditLedger:
-    """SQLite audit log recording automation runs, file transformations, and deduplication passes."""
+    # Simple SQLite log table to keep track of when each script ran and how many files/rows it touched.
 
     def __init__(self, db_path: str | Path = ":memory:") -> None:
         self._conn = sqlite3.connect(str(db_path))
@@ -112,11 +112,7 @@ def scan_duplicates(
     root_dir: Path,
     ledger: AuditLedger | None = None,
 ) -> DeduplicationReport:
-    """
-    Two-stage duplicate detector:
-    1. Groups candidate files by exact byte length (eliminating unique-sized files without hashing).
-    2. Computes streaming SHA-256 digests only for size collisions.
-    """
+    # Group files by byte size first so we only SHA-256 hash files that actually have a size match.
     by_size: dict[int, list[Path]] = {}
     scanned = 0
 
