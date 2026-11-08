@@ -1,6 +1,6 @@
-# Python Automation Toolkit
+﻿# DedupeCtl
 
-![CI Status](https://github.com/16lv/python-automation-toolkit/actions/workflows/ci.yml/badge.svg)
+![CI Status](https://github.com/16lv/dedupectl/actions/workflows/ci.yml/badge.svg)
 
 A deterministic file deduplication, CSV-to-JSON data sanitization, and SQLite audit-logging toolkit built with **Python 3.12**.
 
@@ -22,3 +22,4 @@ A deterministic file deduplication, CSV-to-JSON data sanitization, and SQLite au
 ruff check .
 pytest -v
 ```
+
