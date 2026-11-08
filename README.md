@@ -2,18 +2,18 @@
 
 ![CI Status](https://github.com/16lv/dedupectl/actions/workflows/ci.yml/badge.svg)
 
-**DedupeCtl** is a deterministic file deduplication, CSV-to-JSON data sanitization, and SQLite audit-logging toolkit built with **Python 3.12**.
+**DedupeCtl** is a deterministic file deduplication, CSV-to-JSON data sanitisation, and SQLite audit-logging toolkit built with **Python 3.12**.
 
 ## Why I Built It
 
-Hashing every file in a large directory tree with SHA-256 wastes disk I/O when most files don't even share the same byte size. Similarly, ad-hoc CSV cleanup scripts often drop rows silently without recording how many records were rejected. I built DedupeCtl to combine size-filtered SHA-256 duplicate scanning and deterministic CSV sanitization with an append-only SQLite execution log (`AuditLedger`).
+Hashing every file in a large directory tree with SHA-256 wastes disk I/O when most files don't even share the same byte size. Similarly, ad-hoc CSV cleanup scripts often drop rows silently without recording how many records were rejected. I built DedupeCtl to combine size-filtered SHA-256 duplicate scanning and deterministic CSV sanitisation with an append-only SQLite execution log (`AuditLedger`).
 
 ## Key Features
 
 1. **Two-Stage Content-Addressable Deduplication (`scan_duplicates`)**:
    - **Pass 1 (Metadata Grouping)**: Walks the directory tree with `rglob("*")` and groups files by `stat().st_size`. Any file with a unique byte size cannot be a duplicate and skips hashing completely.
    - **Pass 2 (Chunked SHA-256)**: Streams 64KB chunks (`compute_sha256`) only for files whose byte sizes collide, grouping identical digests and calculating exact `reclaimable_bytes`.
-2. **CSV Sanitization & Deduplication (`sanitize_and_export_csv`)**: Trims key/value whitespace, rejects rows missing required columns, removes case-insensitive duplicates on a chosen primary key column (`dedupe_key`), and writes sorted JSON output.
+2. **CSV Sanitisation & Deduplication (`sanitize_and_export_csv`)**: Trims key/value whitespace, rejects rows missing required columns, removes case-insensitive duplicates on a chosen primary key column (`dedupe_key`), and writes sorted JSON output.
 3. **SQLite Run Audit Ledger (`AuditLedger`)**: Records every automation run in `workflow_runs` with UTC timestamps, `processed_items`, `affected_items`, and JSON details.
 
 ## Usage Example
