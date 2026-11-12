@@ -1,12 +1,12 @@
-# DedupeCtl
+# SHA-256 File Deduplicator (sha256-file-deduplicator)
 
-![CI Status](https://github.com/16lv/dedupectl/actions/workflows/ci.yml/badge.svg)
+![CI Status](https://github.com/16lv/sha256-file-deduplicator/actions/workflows/ci.yml/badge.svg)
 
-**DedupeCtl** is a deterministic file deduplication, CSV-to-JSON data sanitisation, and SQLite audit-logging toolkit built with **Python 3.12**.
+**SHA-256 File Deduplicator** ($(System.Collections.Hashtable.newRepo)) is a deterministic file deduplication, CSV-to-JSON data sanitisation, and SQLite audit-logging toolkit built with **Python 3.12**.
 
 ## Why I Built It
 
-Hashing every file in a large directory tree with SHA-256 wastes disk I/O when most files don't even share the same byte size. Similarly, ad-hoc CSV cleanup scripts often drop rows silently without recording how many records were rejected. I built DedupeCtl to combine size-filtered SHA-256 duplicate scanning and deterministic CSV sanitisation with an append-only SQLite execution log (`AuditLedger`).
+Hashing every file in a large directory tree with SHA-256 wastes disk I/O when most files don't even share the same byte size. Similarly, ad-hoc CSV cleanup scripts often drop rows silently without recording how many records were rejected. I built SHA-256 File Deduplicator to combine size-filtered SHA-256 duplicate scanning and deterministic CSV sanitisation with an append-only SQLite execution log (`AuditLedger`).
 
 ## Key Features
 
