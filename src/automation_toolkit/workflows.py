@@ -121,12 +121,15 @@ def scan_duplicates(
     root_dir: Path,
     ledger: AuditLedger | None = None,
 ) -> DeduplicationReport:
-    # Group files by byte size first so we only SHA-256 hash files that actually have a size match.
+    root = Path(root_dir)
+    if not root.is_dir():
+        raise NotADirectoryError(f"Root path is not a directory: {root}")
+
     by_size: dict[int, list[Path]] = {}
     scanned = 0
 
-    for entry in sorted(root_dir.rglob("*")):
-        if entry.is_file():
+    for entry in sorted(root.rglob("*")):
+        if entry.is_file() and not entry.is_symlink():
             scanned += 1
             size = entry.stat().st_size
             by_size.setdefault(size, []).append(entry)
@@ -189,14 +192,28 @@ def sanitize_and_export_csv(
     Streams a CSV dataset, trims whitespace, validates required non-empty fields,
     deduplicates records on a primary key column, and writes deterministic JSON output.
     """
+    src_csv = Path(input_csv)
+    dst_json = Path(output_json)
+    clean_dedupe_key = dedupe_key.strip()
+    if not clean_dedupe_key:
+        raise ValueError("dedupe_key must not be blank")
+    if not src_csv.is_file():
+        raise FileNotFoundError(f"Input CSV file not found: {src_csv}")
+
     input_rows = 0
     rejected_rows = 0
     duplicates_removed = 0
     seen_keys: set[str] = set()
     cleaned_records: list[dict[str, str]] = []
 
-    with input_csv.open("r", encoding="utf-8", newline="") as fh:
+    with src_csv.open("r", encoding="utf-8", newline="") as fh:
         reader = csv.DictReader(fh)
+        header_fields = {col.strip() for col in (reader.fieldnames or ()) if col}
+        expected_fields = {f.strip() for f in required_fields} | {clean_dedupe_key}
+        missing_headers = sorted(expected_fields - header_fields)
+        if missing_headers:
+            raise ValueError(f"CSV header missing required columns: {', '.join(missing_headers)}")
+
         for raw_row in reader:
             input_rows += 1
             normalized = {
@@ -207,7 +224,10 @@ def sanitize_and_export_csv(
                 rejected_rows += 1
                 continue
 
-            key_val = normalized.get(dedupe_key, "").lower()
+            key_val = normalized.get(clean_dedupe_key, "").lower()
+            if not key_val:
+                rejected_rows += 1
+                continue
             if key_val in seen_keys:
                 duplicates_removed += 1
                 continue
@@ -215,8 +235,8 @@ def sanitize_and_export_csv(
             seen_keys.add(key_val)
             cleaned_records.append(normalized)
 
-    output_json.parent.mkdir(parents=True, exist_ok=True)
-    output_json.write_text(
+    dst_json.parent.mkdir(parents=True, exist_ok=True)
+    dst_json.write_text(
         json.dumps(cleaned_records, indent=2, sort_keys=True),
         encoding="utf-8",
     )
@@ -226,7 +246,7 @@ def sanitize_and_export_csv(
         valid_rows=len(cleaned_records),
         rejected_rows=rejected_rows,
         duplicates_removed=duplicates_removed,
-        output_path=str(output_json),
+        output_path=str(dst_json),
     )
 
     if ledger is not None:
@@ -237,7 +257,7 @@ def sanitize_and_export_csv(
             details={
                 "rejected_rows": rejected_rows,
                 "duplicates_removed": duplicates_removed,
-                "output_path": str(output_json),
+                "output_path": str(dst_json),
             },
         )
 

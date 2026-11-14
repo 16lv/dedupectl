@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from src.automation_toolkit.workflows import (
     AuditLedger,
     sanitize_and_export_csv,
@@ -69,3 +71,18 @@ def test_csv_sanitizer_filters_invalid_rows_and_deduplicates(tmp_path: Path) -> 
     exported = json.loads(out_json.read_text(encoding="utf-8"))
     assert len(exported) == 2
     assert exported[0]["email"] == "alice@cardiff.ac.uk"
+
+
+def test_workflows_validate_directories_and_csv_headers(tmp_path: Path) -> None:
+    with pytest.raises(NotADirectoryError):
+        scan_duplicates(tmp_path / "does_not_exist")
+
+    bad_csv = tmp_path / "incomplete.csv"
+    bad_csv.write_text("id,name\n1,Test\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="missing required columns"):
+        sanitize_and_export_csv(
+            input_csv=bad_csv,
+            output_json=tmp_path / "out.json",
+            required_fields=["id", "email"],
+            dedupe_key="email",
+        )
